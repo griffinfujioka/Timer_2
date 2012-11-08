@@ -66,6 +66,7 @@ char *pname[]={"Sun", "Mercury", "Venus", "Earth",  "Mars", "Jupiter",
 #include "int.c"
 #include "vid.c" 
 #include "timer.c"
+#include <time.h> 
 
 int initialize()
 {
@@ -106,7 +107,8 @@ int initialize()
 int body()
 {
   char c;
-  while(1){
+  while(1)
+  {
     printf("------------------------------------------\n"); 
     printf("I am process P%d    My parent=%d\n", running->pid, running->ppid);
     
@@ -121,14 +123,15 @@ int body()
     c = getc();   
     printf("%c\n", c);
 
-    switch(c){
+    switch(c)
+    {
       case  's' : do_switch();  break;
       case  'q' : do_exit(100); break;   /* no return */
       case  'f' : do_kfork();   break;
       case  'w' : do_wait(0);   break;
       case  'u' : goUmode();    break;
 
-      default   :              break;  
+      default   :               break;  
     }
   }
 }
@@ -145,31 +148,56 @@ int set_vec(vector, addr) ushort vector, addr;
 
 int tinth();
 
+#include <sys/time.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+
+
 //*************** main() ***************
 main()
 {
+  char buffer[30];
+  struct timeval tv;
+  time_t curtime;
+  time_t mytime;
+  
+  vid_init();       /* Initialize video driver first */ 
+  printf("vid_init : console display driver initialized\n");
 
-   vid_init();
-   printf("vid_init : console display driver initialized\n");
+  printf("\nWelcome to the MTX Operating System\n");
 
-   printf("\nWelcome to the MTX Operating System\n");
-    
-    initialize();
+  /* Could be printing inaccurate time because I'm testing in Qemu, 
+      and the sys clock in Qemu may not be accurate */ 
+  /* Prints inaccurate time */ 
+  mytime = time(0); 
+  printf("time: %s\n", asctime(localtime(&mytime)));
+
+  gettimeofday(&tv, NULL); 
+  curtime= tv.tv_sec; 
+
+  /* Prints inaccurate time */ 
+  printf("Current time: %s\n", asctime(localtime(&curtime))); 
+  //strftime(buffer,30,"%Y-%m-%d %H:%M:%S.%%06u %z",localtime(&curtime));
+  printf("%s%ld\n",buffer,tv.tv_usec);
+
+  initialize();
  
-     set_vec(80, int80h);
+  set_vec(80, int80h);    /* Install syscall interrupt handler */ 
 
-   printf("P0 forks P1\n");
-     kfork();
+  printf("P0 forks P1\n");
+  kfork();
 
-     lock();
-       set_vec( 8, tinth);
-       timer_init(); 
+  lock();           /* Mask out ALL interrupts */ 
+  set_vec( 8, tinth); 
+  timer_init();           /* Install timer interrupts */ 
 
-   printf("P0 switches to P1\n");
+  printf("P0 switches to P1\n");
 
-   while(1){
-      if (rqueue[1].queue)
-         tswitch();
+   while(1)
+   {
+    if (rqueue[1].queue)
+      tswitch();
    }
    printf("P0 resumes: all dead, happy ending!\n");
 }
@@ -191,8 +219,10 @@ int scheduler()
   }
 
   running->time = 5;
+  // TODO: Decrement runnings->run time in Umode only. 
+      // When a PROC's time == 0, switch processes 
   color = 0x09 + running->pid;
-  printf("next running=%d  time : ", running->pid);
+  printf("next running=%d  \ntime : ", running->pid);
 }
 
 

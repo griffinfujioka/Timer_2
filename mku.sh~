@@ -14,7 +14,7 @@ ld86 u.o $1.o /usr/lib/bcc/libc.a
 mount -o loop mtximage.bin fd0
 cp a.out fd0/$1
 cp a.out fd0/bin/$1
-sleep 1 	# Sleep for a second so fd0 will not be busy and is able to umount 
+sleep 2
 sudo umount fd0
 
 rm *.o a.out

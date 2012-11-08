@@ -151,15 +151,15 @@ int putc(c) char c;
 
   int pos, w, offset;
 
-  if (c=='\n'){
-    row++;
-    if (row>=25){
+  if (c=='\n'){       // If c is a newline character 
+    row++;            // Increment row by 1 
+    if (row>=25){     // If row >= 25, you need to scroll page up 
       row = 24;
       scroll();
     }
 
-    pos = 2*(row*80 + column);
-    offset = (org + pos) & vid_mask;
+    pos = 2*(row*80 + column);        
+    offset = (org + pos) & vid_mask;  
     set_6845(CURSOR, offset >> 1);
     return; 
   }
