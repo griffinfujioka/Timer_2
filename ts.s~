@@ -117,12 +117,67 @@ USP =  6
 
 
 _int80h: INTH kcinth
-	inc  _inkmode         ! increment _inkmode when enter Kmode 
+	  push ax
+          push bx
+          push cx
+          push dx
+          push bp
+          push si
+          push di
+          push es
+          push ds
+
+          push cs
+          pop  ds
+
+          inc  _inkmode         ! increment _inkmode when enter Kmode 
+
+	  mov si,_running   	! ready to access proc
+          mov USS[si],ss        ! save SS  in proc.USS
+          mov USP[si],sp        ! save SP  in proc.USP
+
+          ! change DS,ES,SS to Kernel segment
+          mov  di,ds                 
+          mov  es,di            ! CS=DS=SS=ES in Kmode
+          mov  ss,di
+
+          mov  sp, _running     ! sp -> running's kstack[] high end
+          add  sp, _procsize
+
+          call  _kcinth          ! call handler in C
+
+          br    _goUmode         ! return to interrupted point
 
 _tinth:  INTH thandler
-	inc _inkmode          ! enter Kmode : ++inkmode
+	push ax
+        push bx
+        push cx
+        push dx
+        push bp
+        push si
+        push di
+        push es
+        push ds
+
+        push cs
+        pop  ds
+
+        inc _inkmode          ! enter Kmode : ++inkmode
         cmp _inkmode,#1       ! if inkmode == 1 ==> interrupt was in Umode
         jg  kmode
+
+        ! was in Umode: save interrupted (SS,SP) into proc
+	mov si,_running   	! ready to access proc
+        mov USS[si],ss        ! save SS  in proc.USS
+        mov USP[si],sp        ! save SP  in proc.USP
+
+        ! change DS,ES,SS to Kernel segment
+        mov  di,ds            ! stupid !!        
+        mov  es,di            ! CS=DS=SS=ES in Kmode
+        mov  ss,di
+
+        mov  sp, _running     ! sp -> running's kstack[] high end
+        add  sp, _procsize
 kmode:  call  _thandler       ! call handler in C
 
         br    _ireturn        ! return to interrupted point

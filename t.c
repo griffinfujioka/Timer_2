@@ -167,20 +167,6 @@ main()
 
   printf("\nWelcome to the MTX Operating System\n");
 
-  /* Could be printing inaccurate time because I'm testing in Qemu, 
-      and the sys clock in Qemu may not be accurate */ 
-  /* Prints inaccurate time */ 
-  mytime = time(0); 
-  printf("time: %s\n", asctime(localtime(&mytime)));
-
-  gettimeofday(&tv, NULL); 
-  curtime= tv.tv_sec; 
-
-  /* Prints inaccurate time */ 
-  printf("Current time: %s\n", asctime(localtime(&curtime))); 
-  //strftime(buffer,30,"%Y-%m-%d %H:%M:%S.%%06u %z",localtime(&curtime));
-  printf("%s%ld\n",buffer,tv.tv_usec);
-
   initialize();
  
   set_vec(80, int80h);    /* Install syscall interrupt handler */ 
@@ -219,10 +205,9 @@ int scheduler()
   }
 
   running->time = 5;
-  // TODO: Decrement runnings->run time in Umode only. 
-      // When a PROC's time == 0, switch processes 
   color = 0x09 + running->pid;
-  printf("next running=%d  \ntime : ", running->pid);
+  printf("\nnext running=%d", running->pid); 
+  printf("\ntime: %d sec.\n", running->time);
 }
 
 

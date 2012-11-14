@@ -77,10 +77,17 @@ int thandler()
 {
   int pos; 
   char output; 
+  int prevRow; 
+  int prevColumn; 
+  int i; 
+
+  printf(""); 
+  prevRow = row; 
+  prevColumn = column; 
   tick++;     /* Increment tick on each system tick  */ 
   tick %= 60; /* Convert from clock tick to seconds */ 
 
-
+  out_byte(0x20, 0x20); /* Re-enable 8259 so PROC switching may occur */ 
 
   if (tick % 60 == 0)
   {
@@ -102,24 +109,57 @@ int thandler()
       hours = hours % 12; 
     }
 
-    // TODO: Display the current time HH:MM:SS in the lower right corner
-      // Set cursor position to coordinates in bottom right corner 
-          // Use org and offset? 
-          // Just insert a newline and offset into the bottom right corner. 
-      // Get current system time, format into ASCII and print 
-    // Set cursor to write in bottom right corner 
-    row = 24; 
-    column = 80 - 10;  // Subtract 9 so 8 bytes (= 8 chars) can be printed 
+    row = 23; 
+    column = 80 - 10;  // Subtract 10 so 8 bytes (= 8 chars) can be printed + 2 buffer spots
 
 
-    //printf("00:00:0%d\n", seconds);   // Print time 
+    // Print time 
     printTime(); 
 
     // Return cursor to the way it was. 
-    row--; 
+    //row = prevRow; 
+    column = prevColumn; 
+    
+    
     pos = 2*(row*80 + column);        
     offset = (org + pos) & vid_mask;  
-    set_6845(CURSOR, offset >> 1);
+    //set_6845(CURSOR, offset >> 1);
+    
+    // If in Umode, decrement running->time 
+    //printf("inkmode = %d\n", inkmode); 
+    //if(inkmode > 1)
+    //{
+      
+      running->time--; 
+
+      // If running is out of time, switch PROCs
+      if(running->time <= 0)
+      {
+        running->time = 5; 
+        tswitch(); 
+      }
+    //}
+
+
+    // TODO: Finish this component. 
+    // Decrement time for all sleeping PROCs, wake them up if time == 0
+    for(i=0; i<NPROC; i++)
+    {
+      //printf("Looking at P%d\n", i); 
+      if(proc[i].status == SLEEP)
+      {
+        printf("P%d: is asleep!\n", i);   // Print PROC number 
+        printf("Time remaining: %d\n", proc[i].time); 
+        proc[i].time--; 
+        if(proc[i].time <= 0)
+        {
+          proc[i].time = 5; 
+          wakeup(&proc[i].time); 
+        }
+      }
+    }
+
+
     
 
   }
@@ -127,15 +167,11 @@ int thandler()
   // TODO: Toggle FD every 5 seconds 
   //if(tick  % 120 == 0)    /* 60 ticks/second * 5 seconds = 300 ticks */ 
   //{
-    //printf("2 second interrupt - Toggle FD!\n"); 
-    // If FD is on, turn it off 
-    // Else if FD is off, turn it on
-
     // ... what is FD? Floppy Disk? 
   //}
 
 
-    out_byte(0x20, 0x20);  
+  
 
 }
 
