@@ -117,29 +117,18 @@ USP =  6
 
 
 _int80h: INTH kcinth
-	inc  _inkmode         ! increment _inkmode when enter Kmode 
 
 _tinth:  INTH thandler
-	inc _inkmode          ! enter Kmode : ++inkmode
-        cmp _inkmode,#1       ! if inkmode == 1 ==> interrupt was in Umode
-        jg  kmode
-kmode:  call  _thandler       ! call handler in C
 
-        br    _ireturn        ! return to interrupted point
 !*===========================================================================*
 !*		_ireturn  and  goUmode()       				     *
 !*===========================================================================*
 ! ustack contains    flag,ucs,upc, ax,bx,cx,dx,bp,si,di,es,ds
 ! uSS and uSP are in proc
 _ireturn:
-	cli
-        dec _inkmode            ! --inkmode
-        cmp _inkmode,#0         ! inkmode==0 means was in Umode
-        jg  xkmode
-
 _goUmode:
         cli
-        dec _inkmode            ! --inkmode when exit Kmode
+        dec _inkmode            ! --inkmode
         cmp _inkmode,#0         ! inkmode==0 means was in Umode
         jg  xkmode
 

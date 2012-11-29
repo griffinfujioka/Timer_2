@@ -57,6 +57,8 @@ void printTime()
   if(hours < 10)
     oneDigitHours = true; 
 
+
+
   if(oneDigitSeconds && oneDigitMinutes && oneDigitHours)
   {
     printf("0%d:0%d:0%d", hours, minutes, seconds); 
@@ -123,22 +125,22 @@ int thandler()
     
     pos = 2*(row*80 + column);        
     offset = (org + pos) & vid_mask;  
-    //set_6845(CURSOR, offset >> 1);
+    set_6845(CURSOR, offset >> 1);
     
     // If in Umode, decrement running->time 
     //printf("inkmode = %d\n", inkmode); 
-    //if(inkmode > 1)
-    //{
+    if(1 == inkmode)
+    {
       
       running->time--; 
 
-      // If running is out of time, switch PROCs
+      // If running proc is out of time, switch PROCs
       if(running->time <= 0)
       {
         running->time = 5; 
         tswitch(); 
       }
-    //}
+    }
 
 
     // TODO: Finish this component. 
